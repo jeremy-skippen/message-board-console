@@ -17,11 +17,11 @@ public sealed class GetProjectIdByNameHandler : IRequestHandler<GetProjectIdByNa
 
     public async Task<GetProjectIdByNameResponse> Handle(GetProjectIdByName request, CancellationToken cancellationToken)
     {
-        var Project = await _dbContext.Projects!.Where(u => u.ProjectName == request.ProjectName).FirstOrDefaultAsync(cancellationToken);
-        if (Project is null)
+        var project = await _dbContext.Projects!.Where(u => u.ProjectName == request.ProjectName).FirstOrDefaultAsync(cancellationToken);
+        if (project is null)
             return new(null);
         
-        return new(Project.ProjectId);
+        return new(project.ProjectId);
     }
 }
 

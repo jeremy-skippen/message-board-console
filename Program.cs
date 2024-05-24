@@ -28,5 +28,10 @@ for (; ; )
     Console.Write("> ");
     var line = Console.ReadLine();
     if (line is not null)
-        await mediatr.Send(new InterpretCommandLine(line));
+    {
+        var response = await mediatr.Send(new InterpretCommandLine(line));
+        if (!string.IsNullOrWhiteSpace(response))
+            Console.WriteLine(response);
+    }
+    Console.WriteLine();
 }
