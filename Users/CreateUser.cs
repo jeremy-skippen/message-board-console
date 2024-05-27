@@ -7,21 +7,20 @@ public sealed record CreateUser(string UserName) : IRequest<CreateUserResponse>;
 
 public sealed class CreateUserHandler : IRequestHandler<CreateUser, CreateUserResponse>
 {
-    private readonly MessageBoardContext _dbContext;
+    private readonly DataStore _dbContext;
 
-    public CreateUserHandler(MessageBoardContext dbContext)
+    public CreateUserHandler(DataStore dbContext)
     {
         _dbContext = dbContext;
     }
 
-    public async Task<CreateUserResponse> Handle(CreateUser request, CancellationToken cancellationToken)
+    public Task<CreateUserResponse> Handle(CreateUser request, CancellationToken cancellationToken)
     {
         var user = new User(UserId.NewId(), request.UserName);
         
-        _dbContext.Users?.Add(user);
-        await _dbContext.SaveChangesAsync();
+        _dbContext.AddUser(user);
 
-        return new(user.UserId);
+        return Task.FromResult(new CreateUserResponse(user.UserId));
     }
 }
 

@@ -1,16 +1,11 @@
-﻿using JeremySkippen.MessageBoard;
-using JeremySkippen.MessageBoard.Commands;
-
+﻿using JeremySkippen.MessageBoard.Commands;
+using JeremySkippen.MessageBoard.DomainModel;
 using MediatR;
 
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 var serviceProvider = new ServiceCollection()
-    .AddDbContext<MessageBoardContext>(cfg =>
-    {
-        cfg.UseSqlite("Filename=messageboard.db");
-    })
+    .AddSingleton<DataStore>()
     .AddMediatR(cfg =>
     {
         cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
@@ -19,11 +14,8 @@ var serviceProvider = new ServiceCollection()
 
 using var scope = serviceProvider.CreateScope();
 
-var context = serviceProvider.GetRequiredService<MessageBoardContext>();
-context.Database.EnsureCreated();
-
 var mediatr = serviceProvider.GetRequiredService<IMediator>();
-for (; ; )
+for ( ; ; )
 {
     Console.Write("> ");
     var line = Console.ReadLine();
@@ -31,7 +23,8 @@ for (; ; )
     {
         var response = await mediatr.Send(new InterpretCommandLine(line));
         if (!string.IsNullOrWhiteSpace(response))
+        {
             Console.WriteLine(response);
+        }
     }
-    Console.WriteLine();
 }

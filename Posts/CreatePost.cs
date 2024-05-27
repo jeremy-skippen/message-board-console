@@ -11,16 +11,16 @@ public sealed record CreatePost(
 
 public sealed class CreatePostHandler : IRequestHandler<CreatePost, CreatePostResponse>
 {
-    private readonly MessageBoardContext _dbContext;
+    private readonly DataStore _dbContext;
 
-    public CreatePostHandler(MessageBoardContext dbContext)
+    public CreatePostHandler(DataStore dbContext)
     {
         _dbContext = dbContext;
     }
 
-    public async Task<CreatePostResponse> Handle(CreatePost request, CancellationToken cancellationToken)
+    public Task<CreatePostResponse> Handle(CreatePost request, CancellationToken cancellationToken)
     {
-        var Posting = new Posting(
+        var posting = new Posting(
             PostingId.NewId(),
             request.PostedById,
             request.ProjectId,
@@ -28,10 +28,9 @@ public sealed class CreatePostHandler : IRequestHandler<CreatePost, CreatePostRe
             DateTimeOffset.Now
         );
         
-        _dbContext.Postings?.Add(Posting);
-        await _dbContext.SaveChangesAsync();
+        _dbContext.AddPosting(posting);
 
-        return new(Posting.PostingId);
+        return Task.FromResult(new CreatePostResponse(posting.PostingId));
     }
 }
 

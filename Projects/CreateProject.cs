@@ -7,21 +7,20 @@ public sealed record CreateProject(string ProjectName) : IRequest<CreateProjectR
 
 public sealed class CreateProjectHandler : IRequestHandler<CreateProject, CreateProjectResponse>
 {
-    private readonly MessageBoardContext _dbContext;
+    private readonly DataStore _dbContext;
 
-    public CreateProjectHandler(MessageBoardContext dbContext)
+    public CreateProjectHandler(DataStore dbContext)
     {
         _dbContext = dbContext;
     }
 
-    public async Task<CreateProjectResponse> Handle(CreateProject request, CancellationToken cancellationToken)
+    public Task<CreateProjectResponse> Handle(CreateProject request, CancellationToken cancellationToken)
     {
-        var Project = new Project(ProjectId.NewId(), request.ProjectName);
+        var project = new Project(ProjectId.NewId(), request.ProjectName);
         
-        _dbContext.Projects?.Add(Project);
-        await _dbContext.SaveChangesAsync();
+        _dbContext.AddProject(project);
 
-        return new(Project.ProjectId);
+        return Task.FromResult(new CreateProjectResponse(project.ProjectId));
     }
 }
 

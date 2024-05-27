@@ -1,6 +1,5 @@
 using JeremySkippen.MessageBoard.DomainModel;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace JeremySkippen.MessageBoard.Projects;
 
@@ -8,31 +7,25 @@ public sealed record GetProjectTimeline(ProjectId ProjectId) : IRequest<GetProje
 
 public sealed class GetProjectTimelineHandler : IRequestHandler<GetProjectTimeline, GetProjectTimelineResponse>
 {
-    private readonly MessageBoardContext _dbContext;
+    private readonly DataStore _dbContext;
 
-    public GetProjectTimelineHandler(MessageBoardContext dbContext)
+    public GetProjectTimelineHandler(DataStore dbContext)
     {
         _dbContext = dbContext;
     }
 
-    public async Task<GetProjectTimelineResponse> Handle(GetProjectTimeline request, CancellationToken cancellationToken)
+    public Task<GetProjectTimelineResponse> Handle(GetProjectTimeline request, CancellationToken cancellationToken)
     {
-        var items = await _dbContext.Postings!
-            .Where(i => i.ProjectId == request.ProjectId)
-            .Select(i => new
-            {
-                i.PostedBy!.UserName,
+        var items = _dbContext.GetPostingsByProjectId(request.ProjectId)
+            .Select(i => new GetProjectTimelineResponseItem(
+                i.PostedBy?.UserName ?? "",
                 i.Message,
                 i.PostingDateTime
-            })
-            .ToListAsync(cancellationToken);
+            ))
+            .OrderBy(i => i.PostDateTime)
+            .ToList();
 
-        return new(
-            items
-                .OrderBy(i => i.PostingDateTime)
-                .Select(i => new GetProjectTimelineResponseItem(i.UserName, i.Message, i.PostingDateTime))
-                .ToList()
-        );
+        return Task.FromResult(new GetProjectTimelineResponse(items));
     }
 }
 
